@@ -1,0 +1,263 @@
+﻿{
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "name":  "Restaurent_Chatbot",
+    "connections":  {
+                        "Build Reply":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Log to DB",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Gemini AI":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Build Reply",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Webhook Messages (POST)":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Parse Message",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Log to DB":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Send WhatsApp",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Parse Message":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Gemini AI",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Webhook Verify (GET)":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Respond Challenge",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 }
+                    },
+    "nodes":  [
+                  {
+                      "id":  "wh-verify",
+                      "name":  "Webhook Verify (GET)",
+                      "parameters":  {
+                                         "path":  "whatsapp",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     },
+                                         "httpMethod":  "GET"
+                                     },
+                      "webhookId":  "wa-verify",
+                      "type":  "n8n-nodes-base.webhook",
+                      "position":  [
+                                       -160,
+                                       -40
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "id":  "resp-challenge",
+                      "name":  "Respond Challenge",
+                      "parameters":  {
+                                         "responseBody":  "={{ $json.query[\u0027hub.challenge\u0027] }}",
+                                         "respondWith":  "text",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "position":  [
+                                       120,
+                                       -40
+                                   ],
+                      "typeVersion":  1.1
+                  },
+                  {
+                      "id":  "wh-msg",
+                      "name":  "Webhook Messages (POST)",
+                      "parameters":  {
+                                         "path":  "whatsapp",
+                                         "responseMode":  "onReceived",
+                                         "options":  {
+
+                                                     },
+                                         "responseCode":  200,
+                                         "httpMethod":  "POST"
+                                     },
+                      "webhookId":  "wa-messages",
+                      "type":  "n8n-nodes-base.webhook",
+                      "position":  [
+                                       -160,
+                                       180
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "id":  "parse",
+                      "name":  "Parse Message",
+                      "parameters":  {
+                                         "jsCode":  "const body = $input.first().json.body || {};\nconst value = body?.entry?.[0]?.changes?.[0]?.value;\nconst msg = value?.messages?.[0];\n\n// Ignore delivery/read status callbacks and non-text messages\nif (!msg) { return []; }\n\nlet text = \u0027\u0027;\nif (msg.type === \u0027text\u0027) { text = msg.text?.body || \u0027\u0027; }\nelse if (msg.type === \u0027interactive\u0027) {\n  text = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || \u0027\u0027;\n} else {\n  text = \u0027[\u0027 + msg.type + \u0027 message received]\u0027;\n}\n\nconst systemPrompt = \"You are \\u0027Spice Garden\\u0027 restaurant\\u0027s friendly WhatsApp assistant. Be warm, concise (max 4 short lines), and use a few emojis.\\n\\nABOUT US:\\n- Spice Garden - authentic Pakistani \\u0026 Desi cuisine.\\n- Open daily 12:00 PM to 11:30 PM. Dine-in, takeaway \\u0026 home delivery.\\n- Location: Main Boulevard, Lahore. Delivery within 8 km.\\n- Contact: this WhatsApp number.\\n\\nMENU (PKR):\\nStarters: Chicken Samosa 120, Spring Roll 100, Seekh Kebab 350.\\nBBQ: Chicken Tikka 450, Malai Boti 550, Beef Seekh 600.\\nMain: Chicken Karahi (full) 1600 / (half) 850, Mutton Karahi (full) 2400, Daal Makhani 550, Biryani (chicken) 400, Biryani (beef) 450.\\nBreads: Naan 40, Garlic Naan 90, Roghni Naan 80.\\nDrinks: Soft drink 100, Fresh Lassi 200, Mineral water 80.\\nDesserts: Gulab Jamun (2pc) 200, Kheer 250.\\n\\nRULES:\\n- Help customers with menu questions, recommendations, prices, timings, and taking orders.\\n- When taking an order, collect: items+quantity, name, delivery address (or dine-in/takeaway), and phone. Then summarise the order with the total price and ask them to confirm with \\u0027YES\\u0027.\\n- Delivery fee is PKR 150 (free over PKR 2500). Estimated delivery 35-45 min.\\n- If asked something unrelated to the restaurant, politely steer back.\\n- Never invent items not on the menu. Prices are in PKR.\";\n\nreturn [{\n  json: {\n    from: msg.from,\n    name: value?.contacts?.[0]?.profile?.name || \u0027Customer\u0027,\n    text: text,\n    messageId: msg.id,\n    timestamp: msg.timestamp,\n    systemPrompt: systemPrompt\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       80,
+                                       180
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "id":  "gemini",
+                      "name":  "Gemini AI",
+                      "parameters":  {
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "value":  "YOUR_GEMINI_API_KEY",
+                                                                                        "name":  "key"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "method":  "POST",
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"system_instruction\": { \"parts\": [ { \"text\": $json.systemPrompt } ] }, \"contents\": [ { \"role\": \"user\", \"parts\": [ { \"text\": $json.text } ] } ], \"generationConfig\": { \"temperature\": 0.6, \"maxOutputTokens\": 700 } } }}",
+                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+                                         "options":  {
+
+                                                     },
+                                         "sendQuery":  true,
+                                         "sendBody":  true
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       320,
+                                       180
+                                   ],
+                      "typeVersion":  4.2
+                  },
+                  {
+                      "id":  "reply",
+                      "name":  "Build Reply",
+                      "parameters":  {
+                                         "jsCode":  "const r = $input.first().json;\nlet reply = r?.candidates?.[0]?.content?.parts?.[0]?.text;\nif (!reply) { reply = \"Sorry, I had a little trouble there. Could you please repeat that? ðŸ™\"; }\nreply = reply.trim();\nconst p = $(\u0027Parse Message\u0027).first().json;\nreturn [{\n  json: {\n    reply: reply,\n    from: p.from,\n    name: p.name,\n    user_text: p.text,\n    message_id: p.messageId\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       560,
+                                       180
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "id":  "send",
+                      "name":  "Send WhatsApp",
+                      "parameters":  {
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "value":  "Bearer YOUR_WHATSAPP_ACCESS_TOKEN",
+                                                                                         "name":  "Authorization"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "method":  "POST",
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"messaging_product\": \"whatsapp\", \"to\": $(\u0027Build Reply\u0027).item.json.from, \"type\": \"text\", \"text\": { \"preview_url\": false, \"body\": $(\u0027Build Reply\u0027).item.json.reply } } }}",
+                                         "url":  "https://graph.facebook.com/v22.0/1175192132344414/messages",
+                                         "sendHeaders":  true,
+                                         "options":  {
+
+                                                     },
+                                         "sendBody":  true
+                                     },
+                      "onError":  "continueRegularOutput",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       1040,
+                                       180
+                                   ],
+                      "typeVersion":  4.2
+                  },
+                  {
+                      "id":  "logdb",
+                      "name":  "Log to DB",
+                      "type":  "n8n-nodes-base.postgres",
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "9UHZEujypweFSVts",
+                                                           "name":  "Resto Postgres"
+                                                       }
+                                      },
+                      "typeVersion":  2.6,
+                      "onError":  "continueRegularOutput",
+                      "parameters":  {
+                                         "operation":  "insert",
+                                         "schema":  {
+                                                        "__rl":  true,
+                                                        "value":  "public",
+                                                        "mode":  "list"
+                                                    },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "value":  {
+                                                                       "message_id":  "={{ $json.message_id }}",
+                                                                       "user_text":  "={{ $json.user_text }}",
+                                                                       "customer":  "={{ $json.name }}",
+                                                                       "wa_from":  "={{ $json.from }}",
+                                                                       "bot_reply":  "={{ $json.reply }}"
+                                                                   }
+                                                     },
+                                         "options":  {
+
+                                                     },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "chat_logs",
+                                                       "mode":  "list"
+                                                   }
+                                     },
+                      "position":  [
+                                       800,
+                                       180
+                                   ]
+                  }
+              ]
+}

@@ -1,0 +1,51 @@
+# Spice Garden WhatsApp Chatbot — n8n + Postgres
+# Run with:  docker compose up -d
+# This reproduces the stack (n8n on :5678, Postgres on :5433).
+#
+# NOTE: Your existing setup was created manually (container "n8n-container"
+# + "resto-postgres" on network "resto-net"). This file is the clean,
+# reproducible equivalent if you ever want to recreate it from scratch.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: resto-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: resto
+      # Set POSTGRES_PASSWORD in a local .env file (see .env.example). Never commit real passwords.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: restobot
+    ports:
+      - "5433:5432"
+    volumes:
+      - resto_pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resto -d restobot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-container
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5678:5678"
+    environment:
+      # When you put n8n behind a public tunnel, set this so n8n shows the
+      # correct webhook URLs in the editor (replace with your tunnel host):
+      # - WEBHOOK_URL=https://YOUR-TUNNEL.trycloudflare.com
+      - N8N_PORT=5678
+      - GENERIC_TIMEZONE=Asia/Karachi
+      - TZ=Asia/Karachi
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  resto_pgdata:
+  n8n_data:

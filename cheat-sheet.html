@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Spice Restaurent AI — Cheat Sheet</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  :root {
+    --paper: #ffffff; --ink: #241a13; --ink-soft: #5c4f45; --ink-faint: #8a7d71;
+    --line: #e7dccd; --line-strong: #d8c9b4; --saffron: #d97b17; --saffron-deep: #b7600c;
+    --paprika: #b23a2b; --green: #1f9d63; --green-soft: #eef7f1; --amber-soft: #fdf3e6;
+    --amber-line: #eecfa3; --edit: #fbeede;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.4; font-size: 12px;
+  }
+  .sheet { max-width: 190mm; margin: 0 auto; padding: 4mm 2mm; }
+
+  .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+    border-bottom: 2px solid var(--saffron); padding-bottom: 8px; margin-bottom: 12px; }
+  .brand { display: flex; align-items: baseline; gap: 9px; }
+  .brand .mark { font-size: 22px; }
+  h1 { font-family: Georgia, serif; font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sub { font-size: 11px; color: var(--ink-faint); margin: 2px 0 0; }
+  .facts { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+  .fact { font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+    background: #fbf7f0; border: 1px solid var(--line-strong); color: var(--ink-soft); white-space: nowrap; }
+  .fact b { color: var(--ink); }
+
+  .cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; align-items: start; }
+
+  h2 { font-family: Georgia, serif; font-size: 13px; margin: 0 0 6px;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--saffron-deep); }
+
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 4.5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .num { font-family: Georgia, serif; font-weight: 700; color: var(--saffron);
+    width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
+  .nm { font-weight: 700; white-space: nowrap; }
+  .jb { color: var(--ink-soft); }
+  tr.edit td { background: var(--edit); }
+  tr.save td { background: var(--green-soft); }
+  .tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    padding: 1px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+  .tag.you { background: var(--saffron); color: #fff; }
+
+  .box { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; margin-bottom: 11px; }
+  .box.warn { background: var(--amber-soft); border-color: var(--amber-line); }
+  .box h3 { margin: 0 0 6px; font-size: 12px; }
+  .box p { margin: 0 0 5px; color: var(--ink-soft); }
+  .box p:last-child { margin-bottom: 0; }
+  .box ul { margin: 4px 0 0; padding-left: 16px; }
+  .box li { margin: 3px 0; }
+  code { font-family: Consolas, "Roboto Mono", monospace; font-size: 10.5px;
+    background: #f4ece0; padding: 1px 4px; border-radius: 4px; word-break: break-word; }
+  .num-list { margin: 0; padding-left: 15px; }
+  .num-list li { margin: 3px 0; font-weight: 600; }
+
+  .foot { margin-top: 12px; padding-top: 7px; border-top: 1px solid var(--line);
+    font-size: 10px; color: var(--ink-faint); display: flex; justify-content: space-between; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <span class="mark">🍽️</span>
+      <div>
+        <h1>Spice Restaurent AI</h1>
+        <p class="sub">WhatsApp chatbot · quick reference cheat-sheet</p>
+      </div>
+    </div>
+    <div class="facts">
+      <span class="fact"><b>13</b> nodes</span>
+      <span class="fact">Gemini <b>2.5-flash</b></span>
+      <span class="fact">Bilingual</span>
+      <span class="fact">Memory + Orders</span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- LEFT: node table -->
+    <div>
+      <h2>The workflow, node by node</h2>
+      <table>
+        <tr><td class="num">A</td><td class="nm">Webhook Verify + Respond</td><td class="jb">One-time handshake so Meta trusts your URL</td></tr>
+        <tr><td class="num">1</td><td class="nm">Webhook (POST)</td><td class="jb">Front door — catches every incoming message</td></tr>
+        <tr class="edit"><td class="num">2</td><td class="nm">Bot Brain<span class="tag you">edit me</span></td><td class="jb">Menu, prices, rules, tone — the one node you change</td></tr>
+        <tr><td class="num">3</td><td class="nm">Parse Message</td><td class="jb">Pulls sender + text; ignores read-receipts</td></tr>
+        <tr><td class="num">4</td><td class="nm">Load History</td><td class="jb"><b>Memory</b> — reads last 8 turns for this customer</td></tr>
+        <tr><td class="num">5</td><td class="nm">Build Request</td><td class="jb">Stacks the conversation in order for the AI</td></tr>
+        <tr><td class="num">6</td><td class="nm">Gemini AI</td><td class="jb">Writes the reply (auto-retries if busy)</td></tr>
+        <tr><td class="num">7</td><td class="nm">Build Reply</td><td class="jb">Cleans reply + extracts the hidden order</td></tr>
+        <tr><td class="num">8</td><td class="nm">Log to DB</td><td class="jb">Saves every chat (this feeds the memory)</td></tr>
+        <tr><td class="num">9</td><td class="nm">Order Confirmed?</td><td class="jb">Fork: real order → save; else → just reply</td></tr>
+        <tr class="save"><td class="num">10</td><td class="nm">Save Order</td><td class="jb">Writes confirmed orders to the orders table</td></tr>
+        <tr><td class="num">11</td><td class="nm">Send WhatsApp</td><td class="jb">Sends the final reply back to the customer</td></tr>
+      </table>
+    </div>
+
+    <!-- RIGHT: actions & to-do -->
+    <div>
+      <div class="box warn">
+        <h3>⚠️ Still to do — add 3 numbers</h3>
+        <p>Meta → <b>WhatsApp → API Setup → Manage phone number list</b>. Each needs the code Meta texts to it.</p>
+        <ol class="num-list">
+          <li>+92 309 5595593</li>
+          <li>+92 324 1470624</li>
+          <li>+92 325 1238084</li>
+        </ol>
+      </div>
+
+      <div class="box">
+        <h3>✏️ Change the menu or prices</h3>
+        <p>n8n → <b>Bot Brain</b> node → edit text → <b>Save</b>. Live instantly. No code.</p>
+      </div>
+
+      <div class="box">
+        <h3>🟢 Keep it running</h3>
+        <p>Docker (n8n + Postgres) auto-restarts. Keep the tunnel open:</p>
+        <p><code>ngrok http --url=nonanarchically-rambunctious-lashay.ngrok-free.dev 5678</code></p>
+      </div>
+
+      <div class="box">
+        <h3>🗄️ See chats &amp; orders</h3>
+        <p><code>docker exec resto-postgres psql -U resto -d restobot -c "SELECT * FROM orders ORDER BY id DESC LIMIT 5;"</code></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Callback URL: <code>https://nonanarchically-rambunctious-lashay.ngrok-free.dev/webhook/whatsapp</code></span>
+    <span>Workflow <code>xIxzH0KJu0jIbZSC</code></span>
+  </div>
+
+</div>
+</body>
+</html>

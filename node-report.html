@@ -1,0 +1,626 @@
+<title>Spice Restaurent AI — How Every Node Works</title>
+<style>
+  :root {
+    --paper: #faf6ef;
+    --card: #ffffff;
+    --ink: #241a13;
+    --ink-soft: #5c4f45;
+    --ink-faint: #8a7d71;
+    --line: #e7dccd;
+    --line-strong: #d8c9b4;
+    --saffron: #d97b17;
+    --saffron-deep: #b7600c;
+    --paprika: #b23a2b;
+    --green: #1f9d63;
+    --green-soft: #e6f4ec;
+    --green-line: #bfe3cd;
+    --amber-soft: #fbeede;
+    --amber-line: #eecfa3;
+    --rose-soft: #fbe9e6;
+    --rose-line: #eec6bf;
+    --code-bg: #f4ece0;
+    --shadow: 0 1px 2px rgba(60,40,20,.05), 0 8px 24px rgba(60,40,20,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #17110d;
+      --card: #211913;
+      --ink: #f2e7da;
+      --ink-soft: #c3b3a2;
+      --ink-faint: #8f8073;
+      --line: #362a20;
+      --line-strong: #45362a;
+      --saffron: #f0a24a;
+      --saffron-deep: #e08a1e;
+      --paprika: #e07361;
+      --green: #4cc78b;
+      --green-soft: #14261d;
+      --green-line: #285f42;
+      --amber-soft: #2a1f12;
+      --amber-line: #5b421f;
+      --rose-soft: #2a1713;
+      --rose-line: #5c3128;
+      --code-bg: #12100c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #faf6ef; --card: #ffffff; --ink: #241a13; --ink-soft: #5c4f45; --ink-faint: #8a7d71;
+    --line: #e7dccd; --line-strong: #d8c9b4; --saffron: #d97b17; --saffron-deep: #b7600c; --paprika: #b23a2b;
+    --green: #1f9d63; --green-soft: #e6f4ec; --green-line: #bfe3cd; --amber-soft: #fbeede; --amber-line: #eecfa3;
+    --rose-soft: #fbe9e6; --rose-line: #eec6bf; --code-bg: #f4ece0; --shadow: 0 1px 2px rgba(60,40,20,.05), 0 8px 24px rgba(60,40,20,.06);
+  }
+  :root[data-theme="dark"] {
+    --paper: #17110d; --card: #211913; --ink: #f2e7da; --ink-soft: #c3b3a2; --ink-faint: #8f8073;
+    --line: #362a20; --line-strong: #45362a; --saffron: #f0a24a; --saffron-deep: #e08a1e; --paprika: #e07361;
+    --green: #4cc78b; --green-soft: #14261d; --green-line: #285f42; --amber-soft: #2a1f12; --amber-line: #5b421f;
+    --rose-soft: #2a1713; --rose-line: #5c3128; --code-bg: #12100c; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 22px 96px; }
+
+  /* ---- header ---- */
+  header {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--saffron-deep); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-weight: 700; font-size: clamp(30px, 5.5vw, 46px);
+    line-height: 1.08; margin: 0 0 16px; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .lede { font-size: 17px; color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px;
+  }
+  .chip {
+    font-size: 12.5px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line-strong); color: var(--ink-soft);
+  }
+  .chip b { color: var(--ink); font-weight: 700; }
+
+  /* ---- flow strip ---- */
+  .flow {
+    margin: 40px 0 12px; padding: 22px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  }
+  .flow h2 { margin: 0 0 4px; }
+  .flow-note { font-size: 14px; color: var(--ink-faint); margin: 0 0 18px; }
+  .track { display: flex; flex-wrap: wrap; gap: 7px 6px; align-items: center; }
+  .step {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 9px;
+    background: var(--paper); border: 1px solid var(--line-strong); white-space: nowrap;
+  }
+  .step .n { color: var(--saffron-deep); font-variant-numeric: tabular-nums; }
+  .arrow { color: var(--ink-faint); font-weight: 700; }
+  .step.branch { background: var(--green-soft); border-color: var(--green-line); }
+
+  h2 {
+    font-family: Georgia, "Iowan Old Style", serif; font-weight: 700;
+    font-size: 24px; letter-spacing: -.01em; margin: 0;
+  }
+  .section-head { margin: 56px 0 8px; }
+  .section-head p { color: var(--ink-soft); margin: 8px 0 0; font-size: 15.5px; }
+
+  /* ---- node cards ---- */
+  .node {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 26px 26px 24px; margin-top: 20px;
+    scroll-margin-top: 20px;
+  }
+  .node-top { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; }
+  .node-num {
+    font-family: Georgia, serif; font-size: 26px; font-weight: 700; color: var(--saffron);
+    font-variant-numeric: tabular-nums; line-height: 1; flex: none; min-width: 38px;
+  }
+  .node-title { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .node-kind {
+    display: inline-block; margin-top: 5px; font-size: 11.5px; font-weight: 700;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .node-body { margin-top: 12px; padding-left: 52px; }
+  @media (max-width: 560px) { .node-body { padding-left: 0; } }
+  .node-body > p { margin: 0 0 14px; color: var(--ink-soft); }
+  .node-body > p strong { color: var(--ink); }
+
+  .panel { border-radius: 11px; padding: 13px 15px; margin: 10px 0; border: 1px solid; }
+  .panel .lbl {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  .panel ul { margin: 0; padding-left: 18px; }
+  .panel li { margin: 5px 0; font-size: 14.5px; }
+  .panel li b { font-weight: 700; }
+  .do   { background: var(--green-soft); border-color: var(--green-line); }
+  .do .lbl { color: var(--green); }
+  .dont { background: var(--rose-soft); border-color: var(--rose-line); }
+  .dont .lbl { color: var(--paprika); }
+
+  code, .mono {
+    font-family: "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+    font-size: 12.8px; background: var(--code-bg); padding: 1.5px 6px; border-radius: 5px;
+    color: var(--ink); word-break: break-word;
+  }
+  .why { font-size: 13.5px; color: var(--ink-faint); font-style: italic; }
+
+  /* ---- meta section ---- */
+  .meta-steps { counter-reset: ms; margin: 20px 0 0; padding: 0; list-style: none; }
+  .meta-steps > li {
+    position: relative; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); padding: 18px 20px 18px 62px; margin-top: 14px;
+  }
+  .meta-steps > li::before {
+    counter-increment: ms; content: counter(ms);
+    position: absolute; left: 16px; top: 17px;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--saffron); color: #fff; font-weight: 800; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-steps h3 { margin: 0 0 4px; font-size: 16px; }
+  .meta-steps p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+
+  .callout {
+    margin-top: 20px; padding: 16px 18px; border-radius: 12px;
+    background: var(--amber-soft); border: 1px solid var(--amber-line);
+    font-size: 14.5px; color: var(--ink-soft);
+  }
+  .callout strong { color: var(--ink); }
+
+  footer {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 13.5px; color: var(--ink-faint);
+  }
+  a { color: var(--saffron-deep); }
+  @media (prefers-color-scheme: dark) { a { color: var(--saffron); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Workflow Reference · n8n</p>
+    <h1>How every node in Spice&nbsp;Restaurent&nbsp;AI works</h1>
+    <p class="lede">A plain-language tour of your WhatsApp chatbot — what each of the 13 nodes does, which settings we chose and why, what we deliberately left off and why, and how the Meta WhatsApp Cloud API is wired to it.</p>
+    <div class="meta-row">
+      <span class="chip"><b>13</b> nodes</span>
+      <span class="chip">Gemini <b>2.5-flash</b></span>
+      <span class="chip">PostgreSQL memory</span>
+      <span class="chip">Bilingual · English + Urdu</span>
+      <span class="chip">Status: <b>Live</b></span>
+    </div>
+  </header>
+
+  <div class="flow">
+    <h2>The two paths through the workflow</h2>
+    <p class="flow-note">Every WhatsApp event hits n8n. A GET is Meta checking you're alive; a POST is a real message.</p>
+    <div class="track">
+      <span class="step"><span class="n">A</span> Webhook Verify (GET)</span>
+      <span class="arrow">→</span>
+      <span class="step">Respond Challenge</span>
+    </div>
+    <div class="track" style="margin-top:12px;">
+      <span class="step"><span class="n">1</span> Webhook (POST)</span><span class="arrow">→</span>
+      <span class="step"><span class="n">2</span> Bot Brain</span><span class="arrow">→</span>
+      <span class="step"><span class="n">3</span> Parse</span><span class="arrow">→</span>
+      <span class="step"><span class="n">4</span> Load History</span><span class="arrow">→</span>
+      <span class="step"><span class="n">5</span> Build Request</span><span class="arrow">→</span>
+      <span class="step"><span class="n">6</span> Gemini AI</span><span class="arrow">→</span>
+      <span class="step"><span class="n">7</span> Build Reply</span><span class="arrow">→</span>
+      <span class="step"><span class="n">8</span> Log to DB</span><span class="arrow">→</span>
+      <span class="step"><span class="n">9</span> Order Confirmed?</span><span class="arrow">→</span>
+      <span class="step branch">10 Save Order</span><span class="arrow">→</span>
+      <span class="step"><span class="n">11</span> Send WhatsApp</span>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>The verification path</h2>
+    <p>This runs once, when you paste the webhook URL into Meta. It never runs again for real messages.</p>
+  </div>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">A</span>
+      <div>
+        <p class="node-title">Webhook Verify (GET)</p>
+        <span class="node-kind">Webhook node · GET</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>When you save the callback URL in Meta, Meta sends a one-time <strong>GET</strong> request to prove the address is really yours. This node catches that check.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>Method = GET</b>, <b>Path = <code>whatsapp</code></b> — gives the fixed URL <code>/webhook/whatsapp</code> that you paste into Meta.</li>
+          <li><b>Respond = "Using Respond to Webhook node"</b> — we need to hand back Meta's exact challenge value, so we let the next node build the reply instead of a canned response.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>No authentication on the node. <span class="why">Meta's own verify-token (<code>resto_verify_123</code>) is the security check — Meta must echo it back, so an extra password would only get in the way.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">A</span>
+      <div>
+        <p class="node-title">Respond Challenge</p>
+        <span class="node-kind">Respond to Webhook node</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Meta's verification GET carries a value called <code>hub.challenge</code>. To pass the check, we must reply with that <em>exact</em> value as plain text. This node does only that.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>Respond With = Text</b>, body = <code>{{ $json.query['hub.challenge'] }}</code> — echoes Meta's challenge straight back so Meta marks the webhook <b>Verified</b>.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not returning JSON or a status page. <span class="why">Meta wants the raw challenge string and nothing else — extra wrapping makes verification fail.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <div class="section-head">
+    <h2>The message path</h2>
+    <p>This is the real chatbot. It runs top-to-bottom every time a customer sends a WhatsApp message.</p>
+  </div>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">1</span>
+      <div>
+        <p class="node-title">Webhook Messages (POST)</p>
+        <span class="node-kind">Webhook node · POST</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>The front door. Every incoming customer message arrives here as a <strong>POST</strong> from Meta.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>Method = POST</b>, same <b>Path = <code>whatsapp</code></b> — one URL handles both Meta's verify (GET) and real messages (POST).</li>
+          <li><b>Respond = Immediately, code 200</b> — we tell Meta "got it" the instant the message lands, then keep working in the background. <span class="why">If we made Meta wait for Gemini, Meta would think we timed out and resend the same message over and over.</span></li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not verifying Meta's signature header. <span class="why">Fine for this private test setup; worth adding if you go fully public with a real business number.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">2</span>
+      <div>
+        <p class="node-title">Bot Brain</p>
+        <span class="node-kind">Set node · the editable prompt</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>This is the one node <strong>you</strong> edit. It holds the entire personality, menu, prices, rules and language instructions as a single block of text called <code>systemPrompt</code>. Everything the bot "knows" lives here.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>One field, <code>systemPrompt</code></b> — kept as plain text so you can change the menu or tone with no code.</li>
+          <li><b>"Include other input fields" = ON</b> — passes the incoming message through untouched alongside the prompt, so nothing downstream breaks.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Prices/menu aren't in the code or database. <span class="why">On purpose — one text box means you never need a developer to change a price.</span></li>
+        </ul>
+      </div>
+      <p class="why">✏️ To change the menu: open n8n → this node → edit the text → Save. Live instantly.</p>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">3</span>
+      <div>
+        <p class="node-title">Parse Message</p>
+        <span class="node-kind">Code node · JavaScript</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Meta's message packet is large and messy. This node digs out just what we need: <strong>who</strong> sent it, their <strong>name</strong>, and the <strong>text</strong> they typed.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>Pulls <b>sender number, profile name, message text, message ID</b> into clean fields.</li>
+          <li>Handles <b>button/list taps</b> too (uses the button's title as the text).</li>
+          <li><b>Ignores non-messages</b> — Meta also sends "delivered / read" receipts. If there's no real message, the node stops the run early (<code>return []</code>) so the bot doesn't reply to a receipt.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not downloading images/voice notes. <span class="why">It notes their type (e.g. "[image message received]") but doesn't process the file — text is all this bot needs today.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">4</span>
+      <div>
+        <p class="node-title">Load History</p>
+        <span class="node-kind">Postgres node · SELECT</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>This is the bot's <strong>memory</strong>. It reads the last few messages you exchanged with <em>this</em> customer from the database, so the bot remembers the conversation instead of treating every message as brand new.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>Query the last 8 exchanges</b> for this exact phone number, newest first.</li>
+          <li><b>"Always output data" = ON</b> — a brand-new customer has no history; this keeps the flow moving instead of stopping on an empty result.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not loading the <em>whole</em> chat history. <span class="why">Only 8 recent turns — enough for context, while keeping the AI fast and within limits.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">5</span>
+      <div>
+        <p class="node-title">Build Request</p>
+        <span class="node-kind">Code node · JavaScript</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Assembles the package we send to the AI. It takes the remembered history plus the new message and stacks them in order — <strong>customer, bot, customer, bot…</strong> — so Gemini reads the conversation like a real transcript.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>Flips the history to <b>oldest-first</b> and tags each line as <b>customer</b> or <b>bot</b>, then adds the new message last.</li>
+          <li>Carries the <b>Bot Brain prompt</b> along so the AI keeps its rules.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>No summarising or trimming of old messages. <span class="why">Not needed at 8 turns; would only add complexity.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">6</span>
+      <div>
+        <p class="node-title">Gemini AI</p>
+        <span class="node-kind">HTTP Request · Google Gemini</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>The brain in action. Sends the prompt + conversation to Google's <strong>gemini-2.5-flash</strong> model and gets the written reply back.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>Model 2.5-flash</b> — fast and free-tier friendly; ideal for chat.</li>
+          <li><b>Temperature 0.6</b> — friendly and natural, but still sticks to your prices and rules (not too random).</li>
+          <li><b>Max 800 tokens</b> — long enough for an order summary, short enough to stay snappy.</li>
+          <li><b>Auto-retry up to 5×</b> — if Google's free tier is briefly busy, it waits and tries again instead of going silent.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not on a paid plan. <span class="why">Free tier allows ~20 replies/minute — plenty for a real restaurant. Turn on billing later if you expect bursts.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">7</span>
+      <div>
+        <p class="node-title">Build Reply</p>
+        <span class="node-kind">Code node · JavaScript</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Cleans up the AI's answer and does one clever thing: it looks for a <strong>hidden order line</strong>. When a customer confirms, the AI secretly adds a machine line starting with <code>#ORDER#</code>. This node pulls that out, turns it into structured order data, and <em>removes</em> it so the customer never sees it.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>Extracts the <code>#ORDER#</code> data (items, total, type, address, name) into a clean order object.</li>
+          <li><b>Strips that hidden line</b> from the visible reply.</li>
+          <li>Provides a polite <b>fallback message</b> if the AI ever returns nothing.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not trusting the AI to write to the database directly. <span class="why">We parse and validate the order here first — safer and predictable.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">8</span>
+      <div>
+        <p class="node-title">Log to DB</p>
+        <span class="node-kind">Postgres node · INSERT</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Saves every exchange (customer message + bot reply) into the <code>chat_logs</code> table. This is what makes memory possible next time — and gives you a full record of every conversation.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>Inserts <b>sender, name, their text, the reply, message ID</b> into <code>chat_logs</code>.</li>
+          <li><b>"Continue on error" = ON</b> — if a save hiccups, the customer <em>still</em> gets their reply. The message matters more than the log.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not deleting old logs. <span class="why">Kept for history &amp; memory; you can clear them anytime with one SQL command.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">9</span>
+      <div>
+        <p class="node-title">Order Confirmed?</p>
+        <span class="node-kind">IF node · the fork</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>The decision point. It checks: did Build Reply find a real order? <strong>Yes</strong> → go save it, then reply. <strong>No</strong> → skip straight to replying.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>One boolean test: <b>"is there an order?"</b> — true sends the flow to <b>Save Order</b>, false goes straight to <b>Send WhatsApp</b>.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not saving <em>every</em> chat as an order. <span class="why">Only genuine confirmations (customer said YES) reach the orders table — no junk rows.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">10</span>
+      <div>
+        <p class="node-title">Save Order</p>
+        <span class="node-kind">Postgres node · INSERT (orders)</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>Writes a confirmed order into the <code>orders</code> table — a proper record you can act on in the kitchen.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li>Saves <b>customer, phone, items, total (PKR), order type, address</b>, and marks status <b>"confirmed"</b>.</li>
+          <li>Items stored as structured <b>JSON</b> so you can read them back cleanly.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not charging payment or printing a receipt. <span class="why">This records the order; connecting a POS or printer is a future upgrade.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <article class="node">
+    <div class="node-top">
+      <span class="node-num">11</span>
+      <div>
+        <p class="node-title">Send WhatsApp</p>
+        <span class="node-kind">HTTP Request · Meta Cloud API</span>
+      </div>
+    </div>
+    <div class="node-body">
+      <p>The last step — sends the finished reply back to the customer on WhatsApp through Meta's Cloud API.</p>
+      <div class="panel do">
+        <p class="lbl">◆ What we set &amp; why</p>
+        <ul>
+          <li><b>POST to Meta's Graph API</b> with your <b>permanent token</b> in the Authorization header.</li>
+          <li>Sends a plain <b>text</b> message to the customer's number with the cleaned reply.</li>
+          <li><b>"Continue on error" = ON</b> — one failed send never crashes the whole workflow.</li>
+        </ul>
+      </div>
+      <div class="panel dont">
+        <p class="lbl">◇ What we're NOT doing &amp; why</p>
+        <ul>
+          <li>Not sending buttons/images/templates yet. <span class="why">Plain text is simplest and works inside the 24-hour reply window; rich formats can be added later.</span></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <div class="section-head">
+    <h2>How the Meta WhatsApp Cloud API is wired up</h2>
+    <p>These are the one-time setup steps that connect Meta's servers to your n8n workflow. Once done, they keep working on their own.</p>
+  </div>
+
+  <ol class="meta-steps">
+    <li>
+      <h3>A Meta app with WhatsApp added</h3>
+      <p>In developers.facebook.com you created an app and added the <strong>WhatsApp</strong> product. This gives you a free <strong>test phone number</strong> and the two IDs the bot uses: the <strong>Phone Number ID</strong> (who sends) and the <strong>WABA ID</strong> (the business account).</p>
+    </li>
+    <li>
+      <h3>The public tunnel (ngrok)</h3>
+      <p>Meta lives on the internet; your n8n runs on your PC. <strong>ngrok</strong> gives your PC a permanent public web address that forwards to n8n on port 5678. Meta talks to that address; it never changes as long as you use your reserved domain.</p>
+    </li>
+    <li>
+      <h3>Callback URL + Verify Token</h3>
+      <p>In <strong>WhatsApp → Configuration</strong> you pasted the callback URL <code>…/webhook/whatsapp</code> and the verify token <code>resto_verify_123</code>. Meta sent the GET check (nodes A above), your workflow echoed the challenge, and Meta marked it <strong>Verified</strong>.</p>
+    </li>
+    <li>
+      <h3>Subscribe to the "messages" field</h3>
+      <p>On the same page you switched the object to <strong>WhatsApp Business Account</strong> and turned <strong>messages</strong> ON. This is what tells Meta to actually forward customer messages to your webhook — the piece that was missing at first.</p>
+    </li>
+    <li>
+      <h3>Subscribe the app to the business account</h3>
+      <p>A behind-the-scenes call linked your app to the WhatsApp Business Account (<code>subscribed_apps</code>). Without this, messages verify but never arrive. This fixed the "no reply" problem.</p>
+    </li>
+    <li>
+      <h3>A permanent System User token</h3>
+      <p>Test tokens die after 24 hours. You created a <strong>System User</strong> in Business Settings, gave it the WhatsApp permissions, and generated a token set to expire <strong>Never</strong>. That token sits in the Send WhatsApp node so the bot keeps working without daily re-logins.</p>
+    </li>
+    <li>
+      <h3>Recipient list (test number only)</h3>
+      <p>The free test number can only message up to <strong>5 pre-verified numbers</strong>. Each one is added under <strong>API Setup → Manage phone number list</strong> and confirmed with a code Meta sends to that WhatsApp. A real business number removes this limit.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <strong>The one thing still to do:</strong> add your three new numbers (+92&nbsp;309&nbsp;5595593, +92&nbsp;324&nbsp;1470624, +92&nbsp;325&nbsp;1238084) in <strong>Meta → WhatsApp → API Setup → Manage phone number list</strong>. Each needs the verification code Meta texts to that WhatsApp. This can only be done by you in Meta — it isn't something the workflow can do.
+  </div>
+
+  <footer>
+    Spice Restaurent AI · n8n workflow <code>xIxzH0KJu0jIbZSC</code> · Gemini 2.5-flash · PostgreSQL <code>chat_logs</code> + <code>orders</code>. Edit the menu and rules anytime in the <strong>Bot Brain</strong> node.
+  </footer>
+</div>
