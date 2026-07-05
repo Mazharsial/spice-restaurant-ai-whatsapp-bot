@@ -1,9 +1,28 @@
 # 🍽️ Spice Restaurent AI — WhatsApp Restaurant Chatbot
 
-An AI WhatsApp chatbot built with **n8n** (Docker) + **Meta WhatsApp Cloud API** + **Google Gemini AI**, with **PostgreSQL** for chat logs and orders.
+![n8n](https://img.shields.io/badge/n8n-automation-EA4B71?logo=n8n&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-AI-4285F4?logo=google&logoColor=white)
+![WhatsApp Cloud API](https://img.shields.io/badge/WhatsApp-Cloud%20API-25D366?logo=whatsapp&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-database-4169E1?logo=postgresql&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
+> A **bilingual (English + Urdu)** AI WhatsApp assistant that chats with customers, shares the menu, remembers the conversation, and **saves confirmed orders to a database** — built with **n8n** + **Meta WhatsApp Cloud API** + **Google Gemini AI** + **PostgreSQL**.
 
 Workflow name: **`Spice Restaurent AI`** (id `<YOUR_WORKFLOW_ID>`), running **active** in local n8n.
 Restaurant brand used in replies: **Spice Restaurant**.
+
+---
+
+## 🎬 Demo
+
+<p align="center">
+  <img src="docs/demo.png" alt="Spice Restaurent AI — WhatsApp conversation demo showing a bilingual order being placed and saved" width="420">
+</p>
+
+<p align="center"><em>The bot takes an order in Roman Urdu, remembers the whole chat, and auto-saves the confirmed order to PostgreSQL.</em></p>
+
+🔗 **Live animated demo:** open [`demo.html`](demo.html) in a browser (auto-plays the full conversation).
+📄 **Deep dive:** [`node-report.html`](node-report.html) explains every node · [one-page cheat sheet PDF](Spice-Restaurent-AI-Cheat-Sheet.pdf).
 
 ---
 
